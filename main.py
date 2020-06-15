@@ -1,28 +1,36 @@
 from vec3 import *
 from ray import Ray
+from math import sqrt
 
 
 def ray_color(ray: Ray) -> Vec3:
-    bhit_sphere = hit_sphere(Vec3(0.0, 0.0, -1.0), 0.5, ray)
-    if bhit_sphere:
-        return Vec3(1, 0, 0)
+    t = hit_sphere(Vec3(0.0, 0.0, -1.0), 0.5, ray)
+
+    if t > 0.0:
+        n = unit_vector(ray.at(t) - Vec3(0, 0, -1))
+        return 0.5 * Vec3(n.x+1, n.y+1, n.z+1)
+
     unit_direction = Vec3(unit_vector(ray.direction))
     t = 0.5 * (unit_direction.y + 1.0)
     return (1.0-t) * Vec3(1.0, 1.0, 1.0) + t * Vec3(0.5, 0.7, 1.0)
 
 
-def hit_sphere(center: Vec3, radius: float, ray: Ray) -> bool:
+def hit_sphere(center: Vec3, radius: float, ray: Ray) -> float:
     oc = ray.origin - center
-    a = dot(ray.direction, ray.direction)
-    b = 2.0 * dot(oc, ray.direction)
-    c = dot(oc, oc) - radius*radius
-    discriminant = b*b - 4*a*c
-    return discriminant > 0
+    a = ray.direction.length_squared() #dot(ray.direction, ray.direction)
+    half_b = dot(oc, ray.direction)
+    c = oc.length_squared() - radius*radius
+    discriminant = half_b*half_b - a*c
+
+    if discriminant < 0:
+        return -1.0
+
+    return (-half_b - sqrt(discriminant)) / float(a)
 
 
 def main():
-    image_width = 800
-    image_height = 400
+    image_width = 400
+    image_height = 200
     focal_length = 1.0
     aspect_ratio = float(image_width) / float(image_height)
 
